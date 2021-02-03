@@ -5,6 +5,7 @@ import platform
 import os
 from math import sin
 import numpy as np
+import json
 
 
 app = Flask(__name__)
@@ -27,9 +28,13 @@ def get_date():
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     return jsonify({'time': time, 'day': day, 'month': month, 'year':year, 'date_time': date_time})
 
-@app.route("/data/get_example", methods=['GET'])
+@app.route("/api/data/get_example", methods=['GET'])
 def get_example_data():
-    x_val = 
+    x_val = np.round(np.linspace(0, 7, num=30, endpoint=False), decimals=3)
+    y_val = np.round(np.array([sin(y) for y in x_val]), decimals=3)
+    return jsonify({'x': x_val.tolist(), 'y':y_val.tolist()})
+
+
 
 @app.errorhandler(404)
 def not_found(error):

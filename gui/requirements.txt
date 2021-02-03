@@ -1,0 +1,6 @@
+flask
+flask-cors
+json_logging
+gunicorn
+numpy
+requests
