@@ -7,6 +7,7 @@ from math import sin
 import numpy as np
 import json
 
+from scraping import scrape_yahoo
 
 app = Flask(__name__)
 CORS(app)
@@ -34,6 +35,17 @@ def get_example_data():
     y_val = np.round(np.array([sin(y) for y in x_val]), decimals=3)
     return jsonify({'x': x_val.tolist(), 'y':y_val.tolist()})
 
+@app.route("/api/data/get_yahoo", methods=['GET'])
+def get_yahoo_data():
+    x_val = np.array([])
+    y_val = np.array([])
+    close_val = scrape_yahoo()
+    
+    for i,value in enumerate(close_val):
+        x_val = np.append(x_val, i+1)
+        y_val = np.append(y_val, value)
+
+    return jsonify({'x': x_val.tolist(), 'y':y_val.tolist()})
 
 
 @app.errorhandler(404)

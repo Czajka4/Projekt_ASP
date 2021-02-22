@@ -24,14 +24,14 @@ def example():
 
 @app.route('/readjson')
 def read_json():
-    url = "http://api:5000/api/data/get_example"
+    url = "http://api:5000/api/data/get_yahoo"
     response = requests.get(url=url) #, json=jsonf)
     data = response.json()
 
     labels = list(data['x'])
     values = list(data['y'])
 
-    return render_template('testchart.html', title='Sinus', max=1, 
+    return render_template('testchart.html', title='Sinus', max=10, 
                             labels=labels, values=values)
 
 
