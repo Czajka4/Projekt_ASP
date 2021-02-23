@@ -8,6 +8,7 @@ import numpy as np
 import json
 
 from scraping import scrape_yahoo
+from arima import calculate_arima
 
 app = Flask(__name__)
 CORS(app)
@@ -40,6 +41,7 @@ def get_yahoo_data():
     x_val = np.array([])
     y_val = np.array([])
     close_val = scrape_yahoo()
+    predict_val = calculate_arima(close_val)
     
     for i,value in enumerate(close_val):
         x_val = np.append(x_val, i+1)
