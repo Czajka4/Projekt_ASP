@@ -6,6 +6,7 @@ from statsmodels.tsa.stattools import acf, pacf, adfuller
 from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
 from statsmodels.stats.diagnostic import acorr_ljungbox
 from arch import arch_model
+from datetime import timedelta
 
 
 
@@ -26,6 +27,29 @@ def calculate_arima(df):
     print(fitted_model.summary())
 
     print(acorr_ljungbox(fitted_model.resid,lags=[1,2,3,4,5])[1])
-    preds = fitted_model.predict(start='2020-01-05',end='2020-04-05')
-    
-    print(preds)
+
+    start = df.iloc[[-1]].index
+    end = start + timedelta(weeks=10)
+    start = pd.to_datetime(str(start.values[0]))
+    end =  pd.to_datetime(str(end.values[0]))
+    start_date = start.strftime('%Y.%m.%d')
+    end_date = end.strftime('%Y.%m.%d')
+
+    preds = fitted_model.predict(start=start_date,end=end_date)
+    dfp = pd.DataFrame(preds)
+    dfp = dfp.rename(columns={"predicted_mean": "price"})
+
+
+    last_v = df.price.iloc[-1]
+    for n, x in enumerate(dfp.price.iloc[:]):
+        if n < 1:
+            dfp.price[n] = last_v + x
+        else:
+            dfp.price[n] = dfp.price.iloc[n-1] + dfp.price.iloc[n]
+
+    #print(df, "\n", df_returns, "\n", preds, "\n", dfp)
+
+    return df, dfp
+
+
+ 

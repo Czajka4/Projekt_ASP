@@ -12,21 +12,24 @@ import pandas as pd
 
 from arima import calculate_arima
 
+
 def format_data_frame(df):
     df = df.rename(columns={"Date": "date", "close": "price"})
     df = df.drop(df.columns.difference(['date','price']), 1)
 
     df.price = df.price.astype(float)
+
     df.date = pd.to_datetime(df.date, unit='s')
     df.date = df.date.dt.strftime('%Y-%m-%d')
-    #df = df.asfreq('W-FRI', method='pad')
 
     df = df.set_index('date')
     df.index = pd.DatetimeIndex(df.index).to_period('D')
     df.index = df.index.to_timestamp()
     df = df[~df.index.duplicated()]
     df = df.reindex(pd.date_range(start=df.index.min(), end=df.index.max(), freq='W-FRI'))
+    
     return df
+
 
 def format_date(date_datetime):
      date_timetuple = date_datetime.timetuple()
@@ -60,6 +63,7 @@ def header_function(subdomain):
      
      return hdrs
 
+
 def scrape_yahoo():
     symbol = 'MSFT'
 
@@ -80,20 +84,15 @@ def scrape_yahoo():
     print(f"\n {url} \n")
     print(f"\t >>>>   {page.status_code} \n ")
 
-    #element_html = html.fromstring(page.content)
-
-    #table = element_html.xpath('//table')
-
-    #table_tree = lxml.etree.tostring(table[0], method='xml')
     p = re.compile('HistoricalPriceStore":{"prices":(.*?\])')
     data = json.loads(p.findall(page.text)[0])
 
     df = pd.DataFrame(data)
     df = format_data_frame(df)
 
-    print(df)
-    calculate_arima(df)
-    return df
+    df, dfp = calculate_arima(df)
+
+    return df, dfp
 
 
 if __name__ == "__main__":
