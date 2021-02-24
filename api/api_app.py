@@ -6,9 +6,10 @@ import os
 from math import sin
 import numpy as np
 import json
+import pandas as pd
 
 from scraping import scrape_yahoo
-from arima import calculate_arima
+from arima_model import calculate_arima
 
 app = Flask(__name__)
 CORS(app)
@@ -30,25 +31,19 @@ def get_date():
     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     return jsonify({'time': time, 'day': day, 'month': month, 'year':year, 'date_time': date_time})
 
-@app.route("/api/data/get_example", methods=['GET'])
-def get_example_data():
-    x_val = np.round(np.linspace(0, 7, num=30, endpoint=False), decimals=3)
-    y_val = np.round(np.array([sin(y) for y in x_val]), decimals=3)
-    return jsonify({'x': x_val.tolist(), 'y':y_val.tolist()})
+@app.route("/api/print/", defaults={'symbol' : 'FB'}, methods=['GET'])
+@app.route("/api/print/<string:symbol>")
+def get_yahoo_data(symbol):
+    close_val = scrape_yahoo(symbol)
+    close_val, predict_val = calculate_arima(close_val)
 
-@app.route("/api/data/get_yahoo", methods=['GET'])
-def get_yahoo_data():
-    x_val = np.array([])
-    y_val = np.array([])
-    close_val = scrape_yahoo()
-    predict_val = calculate_arima(close_val)
-    
-    for i,value in enumerate(close_val):
-        x_val = np.append(x_val, i+1)
-        y_val = np.append(y_val, value)
-
-    return jsonify({'x': x_val.tolist(), 'y':y_val.tolist()})
-
+    xc = np.array(pd.to_datetime(close_val.index.values).strftime('%Y.%m.%d'))
+    yc = np.array(close_val.price.iloc[:])
+    xp = np.array(pd.to_datetime(predict_val.index.values).strftime('%Y.%m.%d'))
+    yp = np.array(predict_val.price.iloc[:])
+        
+    return jsonify({"values": {'x': xc.tolist(), 'y': yc.tolist()}, 
+                    "predicted": {'x': xp.tolist(), 'y': yp.tolist() } } )
 
 @app.errorhandler(404)
 def not_found(error):

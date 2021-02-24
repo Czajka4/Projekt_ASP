@@ -6,8 +6,6 @@ COPY gui_app.py .
 COPY gunicorn_starter.sh .
 COPY requirements.txt .
 COPY templates/ ./templates/
-COPY static/ ./static/
-
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1

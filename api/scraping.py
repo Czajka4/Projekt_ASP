@@ -10,9 +10,7 @@ from lxml import html
 import numpy as np
 import pandas as pd
 
-from arima import calculate_arima
-
-
+# modify dataframe for arima model
 def format_data_frame(df):
     df = df.rename(columns={"Date": "date", "close": "price"})
     df = df.drop(df.columns.difference(['date','price']), 1)
@@ -30,7 +28,7 @@ def format_data_frame(df):
     
     return df
 
-
+# format date for yahoo finances api
 def format_date(date_datetime):
      date_timetuple = date_datetime.timetuple()
      date_mktime = time.mktime(date_timetuple)
@@ -38,61 +36,35 @@ def format_date(date_datetime):
      date_str = str(date_int)
      return date_str
 
-
+# generate api link
 def subdomain(symbol, start, end, filter='history'):
      subdoma="/quote/{0}/history?period1={1}&period2={2}&interval=1d&filter={3}&frequency=1d"
      subdomain = subdoma.format(symbol, start, end, filter)
      return subdomain
 
-
-def header_function(subdomain):
-     hdrs =  {"authority": "finance.yahoo.com",
-              "method": "GET",
-              "path": subdomain,
-              "scheme": "https",              
-              "accept-encoding": "gzip, deflate, br",
-              "accept-language": "en-US,en;q=0.9",
-              "cache-control": "no-cache",
-              "dnt": "1",
-              "pragma": "no-cache",
-              "sec-fetch-mode": "navigate",
-              "sec-fetch-site": "same-origin",
-              "sec-fetch-user": "?1",
-              "upgrade-insecure-requests": "1"
-              }
-     
-     return hdrs
-
-
-def scrape_yahoo():
-    symbol = 'MSFT'
-
-    #for n in range()
-    dt_start = datetime.today() - timedelta(days= 730)   
+# generate yahoo page and scrape table with stock prices
+def scrape_yahoo(symbol):
+    dt_start = datetime.today() - timedelta(days= 365) 
     dt_end = datetime.today() 
     
     start = format_date(dt_start)
     end = format_date(dt_end)
     
     sub = subdomain(symbol, start, end)
-    header = header_function(sub)
-    print(header)
     base_url = 'https://finance.yahoo.com'
     url = base_url + sub
     page = requests.get(url)
 
-    print(f"\n {url} \n")
-    print(f"\t >>>>   {page.status_code} \n ")
+    # for debug
+    #print(f"\n {url}")
+    #print(f"\t >>>>   {page.status_code} \n ")
 
     p = re.compile('HistoricalPriceStore":{"prices":(.*?\])')
     data = json.loads(p.findall(page.text)[0])
 
     df = pd.DataFrame(data)
-    df = format_data_frame(df)
-
-    df, dfp = calculate_arima(df)
-
-    return df, dfp
+    df = format_data_frame(df)    
+    return df
 
 
 if __name__ == "__main__":

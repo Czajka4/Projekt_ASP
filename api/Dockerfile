@@ -6,7 +6,7 @@ COPY api_app.py .
 COPY gunicorn_starter.sh .
 COPY requirements.txt .
 COPY scraping.py .
-
+COPY arima_model.py .
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1

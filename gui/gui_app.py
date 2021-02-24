@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response, Markup, render_template
+from flask import Flask, jsonify, make_response, Markup, render_template, redirect, request, url_for
 from datetime import datetime
 from flask_cors import CORS
 import platform
@@ -18,24 +18,38 @@ def get_info():
     hostname=platform.node()
     return jsonify({'hostname': hostname, 'port': str(port), 'env': str(env) })
 
-@app.route('/chart/example')
-def example():    
-    return render_template('first_chart.htmls')
+@app.route("/")
+def home():
+    return redirect(url_for("stock"))
 
-@app.route('/readjson')
-def read_json():
-    url = "http://api:5000/api/data/get_yahoo"
-    response = requests.get(url=url) #, json=jsonf)
+@app.route('/stock', methods=["POST", "GET"])
+def stock():
+    # default or first value is NVDA
+    if request.method == "POST":
+        symbol = str(request.form['ticker'])
+        if symbol:
+            symbol = symbol.upper()
+        else:
+            symbol = "NVDA"
+    else:
+         symbol = "NVDA"
+
+    # ask api for data
+    url = "http://api:5000/api/print/" + symbol
+    response = requests.get(url=url)
     data = response.json()
 
-    labels = list(data['x'])
-    values = list(data['y'])
+    labels_val = list(data['values']['x'])
+    values = list(data['values']['y'])
 
-    return render_template('testchart.html', title='Sinus', max=10, 
-                            labels=labels, values=values)
+    labels_pred = list(data['predicted']['x'])
+    predicted = list(data['predicted']['y'])
 
+    maxv = int(float(max(values)) * 1.1)
 
-
+    return render_template('testchart.html', title=" Kurs {} ".format(symbol), max=maxv, 
+                            labels1=labels_val, values1=values,
+                            labels2=labels_pred, values2=predicted)
 
 
 @app.errorhandler(404)
@@ -43,4 +57,4 @@ def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port) 
